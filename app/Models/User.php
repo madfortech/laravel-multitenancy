@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Scopes\TenentScope;
 
 class User extends Authenticatable
 {
@@ -16,7 +17,10 @@ class User extends Authenticatable
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
-     */
+    */
+
+
+
     protected $fillable = [
         'name',
         'email',
@@ -41,4 +45,22 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenentScope);
+        static::creating(function ($model) {
+
+            if(session()->has('tenant_id'))
+            {
+
+                $model->tenant_id = session()->get('tenant_id'); 
+            }
+       });
+    }
 }
